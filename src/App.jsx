@@ -1,35 +1,60 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useMemo, useEffect } from 'react'
+import Card from "./components/cards"
+
 
 function App() {
-  const [count, setCount] = useState(0)
 
-  return (
+  const jsonfetch = async (url) => {
+    const promise = await fetch(url)
+
+    const promiseJson = await promise.json()
+    return promiseJson
+  }
+
+  const [politicians, setPoliticians] = useState([])
+  const [search,setSearch] = useState("")
+ const [count,setCount] = useState(0)
+
+  const fetchUsers = async () => {
+    try {
+      const data = await jsonfetch("http://localhost:5000/politicians");
+      setPoliticians(data);
+    } catch (error) {
+      console.error("Errore nel fetch:", error);
+    }
+  }
+  
+  useEffect(() => { (fetchUsers()) }, [])
+
+  
+
+  const filterPolitians = useMemo(() => {
+  return politicians?.filter((politician) => {
+    console.log("caricamento")
+  const isInBio = politician.biography?.toLowerCase().includes(search)
+  const inInName = politician.name?.toLowerCase().includes(search)
+  return inInName || isInBio
+  })
+}, [politicians, search])  // Solo se queste dipendenze cambiano
+ 
+return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+    <input type="text" onChange={(e)=>setSearch(e.target.value)} />
+      {
+        filterPolitians?.map((p,index) => {
+          return <Card key={index} poli={p} />
+        }
+        )
+      }
+      {/* prova re-render */}
+      <p>{count}</p>
+     <button onClick={()=>{setCount((curr)=>{
+      return curr + 1
+      })}} >clicca</button>
     </>
   )
 }
 
 export default App
+
+
